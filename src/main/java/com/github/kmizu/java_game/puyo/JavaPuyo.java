@@ -1,30 +1,15 @@
 package com.github.kmizu.java_game.puyo;
 
-import java.applet.AudioClip;
-import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Color;
-import java.awt.Event;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.MediaTracker;
-import java.awt.Panel;
-import java.awt.Point;
-import java.awt.Toolkit;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Enumeration;
-import java.util.Stack;
-import java.util.Vector;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.imageio.*;
 import java.io.File;
+import java.util.Enumeration;
+import java.util.Vector;
 public class JavaPuyo extends JPanel {
         PuyoArray2D field;
         PuyoJudge judge;
