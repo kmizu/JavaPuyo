@@ -1,9 +1,10 @@
-import java.applet.Applet;
 import java.applet.AudioClip;
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Color;
 import java.awt.Event;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -19,9 +20,10 @@ import java.util.Enumeration;
 import java.util.Stack;
 import java.util.Vector;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.imageio.*;
 import java.io.File;
-public class JavaPuyo extends Applet{
+public class JavaPuyo extends JPanel {
         PuyoArray2D field;
         PuyoJudge judge;
         PuyoMover mover;
@@ -33,15 +35,16 @@ public class JavaPuyo extends Applet{
         int rensa;
         int maxRensa;
         boolean firstClick;
-        public void init(){
+        public JavaPuyo() {
+                setPreferredSize(new Dimension(800, 600));
+                setFocusable(true);
+                requestFocusInWindow();
                 firstClick=true;
                 try {
                     PuyoColor.initClass(this);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                offscrn=createImage(240,450);
-                offg=offscrn.getGraphics();
                 field=new PuyoArray2D(8,16);
                 judge=new PuyoJudge(field);
                 mover=new PuyoMover(field);
@@ -84,13 +87,14 @@ public class JavaPuyo extends Applet{
                 };
                 addKeyListener(adapter);
                 addMouseListener(mAdapter);
-                setSize(800, 600);
-        }
-        public void start(){
                 mover.ready();
                 mover.ready();
         }
-        public void paint(Graphics g){
+        public void paintComponent(Graphics g){
+                if(offscrn == null) {
+                    offscrn = createImage(240,450);
+                    offg = offscrn.getGraphics();
+                }
                 field.draw(offg,0,0);
                 mover.draw(offg,0,0);
                 offg.setColor(Color.white);
@@ -153,13 +157,15 @@ public class JavaPuyo extends Applet{
         }
         public static void main(String[] args) {
                 var frame = new JFrame("Java Puyo");
-                frame.setSize(800, 600);
+                var panel = new JavaPuyo();
+                frame.getContentPane().add(panel);
+                frame.pack();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                var applet = new JavaPuyo();
-                frame.getContentPane().add(applet);
-                applet.init();
-                applet.start();
+                frame.setResizable(false);
                 frame.setVisible(true);
+                panel.setBackground(Color.GREEN);
+                frame.validate();
+                panel.validate();
         }
 }
 class Puyo{
@@ -238,7 +244,7 @@ final class PuyoColor{
         private static PuyoColor GRAY;
         private static PuyoColor BLACK;
         private static int num=6;
-        public static void initClass(Applet app) throws Exception {
+        public static void initClass(Component app) throws Exception {
                 MediaTracker mt=new MediaTracker(app);
                 COLOR=new PuyoColor[num];
                 COLOR[0]=PURPLE=new PuyoColor(ImageIO.read(new File("purple_puyo.jpg")));
