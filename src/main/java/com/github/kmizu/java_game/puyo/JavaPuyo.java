@@ -1,3 +1,5 @@
+package com.github.kmizu.java_game.puyo;
+
 import java.applet.AudioClip;
 import java.awt.BorderLayout;
 import java.awt.Button;
