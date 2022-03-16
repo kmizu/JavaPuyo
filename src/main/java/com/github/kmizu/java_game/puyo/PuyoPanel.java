@@ -10,45 +10,45 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.Enumeration;
 import java.util.Vector;
-public class JavaPuyo extends JPanel {
+public class PuyoPanel extends JPanel {
         PuyoArray2D field;
         PuyoJudge judge;
         PuyoMover mover;
-        KeyAdapter adapter;
-        MouseAdapter mAdapter;
-        Image offscrn;
-        Graphics offg;
-        Puyo puyo;
+        KeyAdapter keyAdapter;
+        MouseAdapter mouseAdapter;
+        Image offScreen;
+        Graphics offScreenGraphics;
         int rensa;
         int maxRensa;
         boolean firstClick;
-        public JavaPuyo() {
+        public PuyoPanel() {
                 setPreferredSize(new Dimension(800, 600));
                 setFocusable(true);
                 requestFocusInWindow();
-                firstClick=true;
+                firstClick = true;
                 try {
                     PuyoColor.initClass(this);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                field=new PuyoArray2D(8,16);
-                judge=new PuyoJudge(field);
-                mover=new PuyoMover(field);
-                mAdapter=new MouseAdapter(){
-                        public void mousePressed(MouseEvent evt){
+                field = new PuyoArray2D(8,16);
+                judge = new PuyoJudge(field);
+                mover = new PuyoMover(field);
+                mouseAdapter = new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent event) {
                                 if(firstClick){
                                         removeMouseListener(this);
                                         firstClick=false;
-                                        new JThread().start();
+                                        jThread.start();
                                         try{
                                                 Thread.sleep(200);
-                                        }catch(InterruptedException e){}
-                                        new GThread().start();
+                                        } catch(InterruptedException e){}
+                                        gThread.start();
                                 }
                         }
                 };
-                adapter=new KeyAdapter(){
+                keyAdapter = new KeyAdapter(){
                         public void keyPressed(KeyEvent evt){
                                 synchronized(mover){
                                         switch(evt.getKeyCode()){
@@ -58,7 +58,7 @@ public class JavaPuyo extends JPanel {
                                                 case KeyEvent.VK_DOWN:
                                                         if(!mover.try_down()){
                                                                 mover.notifyAll();
-                                                                removeKeyListener(adapter);
+                                                                removeKeyListener(keyAdapter);
                                                         }
                                                         break;
                                                 case KeyEvent.VK_LEFT:
@@ -72,79 +72,76 @@ public class JavaPuyo extends JPanel {
                                 }
                         }
                 };
-                addKeyListener(adapter);
-                addMouseListener(mAdapter);
+                addKeyListener(keyAdapter);
+                addMouseListener(mouseAdapter);
                 mover.ready();
                 mover.ready();
         }
         public void paintComponent(Graphics g){
-                if(offscrn == null) {
-                    offscrn = createImage(240,450);
-                    offg = offscrn.getGraphics();
+                if(offScreen == null) {
+                        offScreen = createImage(240,450);
+                        offScreenGraphics = offScreen.getGraphics();
                 }
-                field.draw(offg,0,0);
-                mover.draw(offg,0,0);
-                offg.setColor(Color.white);
-                offg.drawString("最高" + maxRensa +"連鎖",20,60);
-                g.drawImage(offscrn,0,0,this);
+                field.draw(offScreenGraphics,0,0);
+                mover.draw(offScreenGraphics,0,0);
+                offScreenGraphics.setColor(Color.white);
+                offScreenGraphics.drawString("最高" + maxRensa +"連鎖",20,60);
+                g.drawImage(offScreen,0,0,this);
         }
-        public void update(Graphics g){paint(g);}
-        public void stop(){}
-        class GThread extends Thread{
-                public void run(){
-                        while(true){
-                                synchronized(mover){
-                                        if(!mover.try_down()){
-                                                mover.notifyAll();
-                                                removeKeyListener(adapter);
-                                                try{
-                                                        Thread.sleep(100);
-                                                }catch(InterruptedException e){}
-                                        }
-                                        repaint();
-                                }
-                                try{
-                                        Thread.sleep(600);
-                                }catch(InterruptedException e){}
-                        }
-                }
+        public void update(Graphics g){
+                paint(g);
         }
-        class JThread extends Thread{
-                public void run(){
+        private final Thread gThread = new Thread(() ->{
+                while(true){
                         synchronized(mover){
-                                while(true){
-                                        try{
-                                                mover.wait();
-
-                                        }catch(InterruptedException e){}
+                                if(!mover.try_down()){
+                                        mover.notifyAll();
+                                        removeKeyListener(keyAdapter);
                                         try{
                                                 Thread.sleep(100);
                                         }catch(InterruptedException e){}
-                                        repaint();
-                                        while(judge.allJudge()){
-                                                rensa++;
-                                                repaint();
-                                                try{
-                                                        Thread.sleep(300);
-                                                }catch(InterruptedException e){}
-                                                judge.shiftAll();
-                                                repaint();
-                                                try{
-                                                        Thread.sleep(300);
-                                                }catch(InterruptedException e){}
-                                        }
-                                        if(maxRensa<rensa){
-                                                maxRensa=rensa;
-                                        }
-                                        rensa=0;
-                                        addKeyListener(adapter);
                                 }
+                                repaint();
+                        }
+                        try{
+                                Thread.sleep(600);
+                        }catch(InterruptedException e){}
+                }
+        });
+        private final Thread jThread = new Thread(() -> {
+                synchronized(mover){
+                        while(true){
+                                try{
+                                        mover.wait();
+
+                                }catch(InterruptedException e){}
+                                try{
+                                        Thread.sleep(100);
+                                }catch(InterruptedException e){}
+                                repaint();
+                                while(judge.allJudge()){
+                                        rensa++;
+                                        repaint();
+                                        try{
+                                                Thread.sleep(300);
+                                        }catch(InterruptedException e){}
+                                        judge.shiftAll();
+                                        repaint();
+                                        try{
+                                                Thread.sleep(300);
+                                        }catch(InterruptedException e){}
+                                }
+                                if(maxRensa<rensa){
+                                        maxRensa=rensa;
+                                }
+                                rensa=0;
+                                addKeyListener(keyAdapter);
                         }
                 }
-        }
+        });
         public static void main(String[] args) {
                 var frame = new JFrame("Java Puyo");
-                var panel = new JavaPuyo();
+                var panel = new PuyoPanel();
                 frame.getContentPane().add(panel);
                 frame.pack();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -346,11 +343,11 @@ class PuyoMover{
                 now[1].right();
                 for(int i=0;i<now.length;i++){
                         if(now[i].getX()>=field.getRWidth()
-                                        ||field.get(now[i].getX(),now[i].getY())!=null){
+                                ||field.get(now[i].getX(),now[i].getY())!=null){
                                 now[0].left();
                                 now[1].left();
                                 return false;
-                                        }
+                        }
                 }
                 return true;
         }
@@ -381,14 +378,14 @@ class PuyoMover{
                         }
                 }
                 if(now[1].getX()<0
-                                ||now[1].getX()>=field.getRWidth()
-                                ||now[1].getY()<-2
-                                ||now[1].getY()>=field.getRHeight()
-                                ||field.get(now[1].getX(),now[1].getY())!=null){
+                        ||now[1].getX()>=field.getRWidth()
+                        ||now[1].getY()<-2
+                        ||now[1].getY()>=field.getRHeight()
+                        ||field.get(now[1].getX(),now[1].getY())!=null){
                         now[1].setX(x1);
                         now[1].setY(y1);
                         turned=false;
-                                }
+                }
                 return turned;
         }
         public synchronized boolean try_left(){
@@ -396,11 +393,11 @@ class PuyoMover{
                 now[1].left();
                 for(int i=0;i<now.length;i++){
                         if(now[i].getX()<0
-                                        ||field.get(now[i].getX(),now[i].getY())!=null){
+                                ||field.get(now[i].getX(),now[i].getY())!=null){
                                 now[0].right();
                                 now[1].right();
                                 return false;
-                                        }
+                        }
                 }
                 return true;
         }
@@ -411,7 +408,7 @@ class PuyoMover{
                 now[1].down();
                 for(int i=0;i<now.length;i++){
                         if(now[i].getY()>=field.getRHeight()
-                                        ||field.get(now[i].getX(),now[i].getY())!=null){
+                                ||field.get(now[i].getX(),now[i].getY())!=null){
                                 now[0].up();
                                 now[1].up();
                                 copy();
@@ -427,7 +424,7 @@ class PuyoMover{
                                 }
                                 ready();
                                 return false;
-                                        }
+                        }
                 }
                 return true;
         }
